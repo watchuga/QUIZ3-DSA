@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Trees Quiz</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --correct-bg: #dcfce7;
+            --correct-border: #16a34a;
+            --incorrect-bg: #fee2e2;
+            --incorrect-border: #dc2626;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+
+        .quiz-container {
+            max-width: 650px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #0f172a;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label.input-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .progress-bar {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .question-title {
+            font-weight: 600;
+            font-size: 1.15rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .option-label:hover {
+            background-color: #f1f5f9;
+        }
+
+        .option-label input {
+            margin-right: 12px;
+        }
+
+        .option-label.disabled {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .option-label.correct {
+            background-color: var(--correct-bg) !important;
+            border-color: var(--correct-border) !important;
+            font-weight: bold;
+        }
+
+        .option-label.incorrect {
+            background-color: var(--incorrect-bg) !important;
+            border-color: var(--incorrect-border) !important;
+        }
+
+        button.action-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button.action-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        button.action-btn:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .feedback-message {
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1rem;
+            min-height: 24px;
+        }
+
+        .feedback-message.correct {
+            color: var(--correct-border);
+        }
+
+        .feedback-message.incorrect {
+            color: var(--incorrect-border);
+        }
+
+        .results-box {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .results-score {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>Binary Trees & AVL Trees Quiz</h1>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen active">
+        <div class="input-group">
+            <label class="input-label" for="student-name">Enter Your Full Name:</label>
+            <input type="text" id="student-name" placeholder="e.g. John Doe" autocomplete="off">
+        </div>
+        <button class="action-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- Question Screen -->
+    <div id="quiz-screen" class="screen">
+        <div class="progress-bar" id="progress-text">Question 1 of 20</div>
+        <div class="question-title" id="question-text"></div>
+        <div class="options-container" id="options-wrapper"></div>
+        <div class="feedback-message" id="feedback-text"></div>
+        <button class="action-btn" id="next-btn" onclick="handleButtonClick()" disabled>Submit Answer</button>
+    </div>
+
+    <!-- Final Score Screen -->
+    <div id="result-screen" class="screen">
+        <div class="results-box">
+            <h2 id="student-display"></h2>
+            <p>You have completed the quiz.</p>
+            <div class="results-score" id="final-score"></div>
+            <p id="score-comment"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    {
+        q: "What defines a tree data structure compared to arrays, linked lists, stacks, and queues?",
+        options: [
+            "It is a linear data structure composed of sequential nodes.",
+            "It is a non-linear, hierarchical data structure composed of nodes connected by edges.",
+            "It is an array-based structure that only stores elements in sorted order.",
+            "It is a contiguous memory block with constant time random access."
+        ],
+        answer: 1
+    },
+    {
+        q: "What is the definition of the 'Root' node in a binary tree?",
+        options: [
+            "A node with exactly two children.",
+            "The node located at the bottom-most level of the tree.",
+            "The topmost node with no parent node.",
+            "Any internal node with at least one leaf."
+        ],
+        answer: 2
+    },
+    {
+        q: "Which term describes nodes that share the exact same parent node?",
+        options: [
+            "Ancestors",
+            "Internal Nodes",
+            "External Nodes",
+            "Siblings"
+        ],
+        answer: 3
+    },
+    {
+        q: "What is an 'Internal Node' in a binary tree?",
+        options: [
+            "A node that has zero children.",
+            "A node that has at least one child node.",
+            "The root node specifically.",
+            "A node located at depth 0."
+        ],
+        answer: 1
+    },
+    {
+        q: "By standard definition, what is the depth of the root node?",
+        options: [
+            "0",
+            "1",
+            "-1",
+            "Dependent on the total number of leaves"
+        ],
+        answer: 0
+    },
+    {
+        q: "How is the height of a node defined?",
+        options: [
+            "The total number of ancestors above the node.",
+            "The number of edges from the root node down to that specific node.",
+            "The number of edges on the longest path from that node down to a leaf.",
+            "The maximum number of nodes the tree can hold."
+        ],
+        answer: 2
+    },
+    {
+        q: "Given a binary tree with height h = 4 (where the root is at depth 0), what is the maximum total number of nodes it can hold?",
+        options: [
+            "15",
+            "16",
+            "31",
+            "32"
+        ],
+        answer: 2
+    },
+    {
+        q: "In a 0-indexed array representation of a binary tree, if a parent node is located at index i, what is the formula for its left child?",
+        options: [
+            "2i",
+            "2i + 1",
+            "2i + 2",
+            "i / 2"
+        ],
+        answer: 1
+    },
+    {
+        q: "In a 0-indexed array representation, if a parent node is located at index i = 6, what is the index of its right child?",
+        options: [
+            "12",
+            "13",
+            "14",
+            "15"
+        ],
+        answer: 2
+    },
+    {
+        q: "Using 0-indexed array representation, what is the parent index formula for a node stored at index i?",
+        options: [
+            "Math.floor((i - 1) / 2)",
+            "Math.floor(i / 2)",
+            "Math.floor((i - 2) / 2)",
+            "Math.floor((i + 1) / 2)"
+        ],
+        answer: 0
+    },
+    {
+        q: "For a node stored at index i = 11 in a 0-indexed array-based binary tree, what is the exact index of its parent node?",
+        options: [
+            "4",
+            "5",
+            "6",
+            "10"
+        ],
+        answer: 1
+    },
+    {
+        q: "Which traversal order visits nodes in the sequence: Root -> Left -> Right?",
+        options: [
+            "In-order Traversal",
+            "Post-order Traversal",
+            "Pre-order Traversal",
+            "Level-order Traversal"
+        ],
+        answer: 2
+    },
+    {
+        q: "What sequence of node visits corresponds to an In-order Traversal?",
+        options: [
+            "Left -> Right -> Root",
+            "Root -> Left -> Right",
+            "Left -> Root -> Right",
+            "Right -> Root -> Left"
+        ],
+        answer: 2
+    },
+    {
+        q: "Which traversal technique visits nodes level by level from top to bottom, left to right?",
+        options: [
+            "Breadth-First Search (BFS) / Level-order Traversal",
+            "Depth-First Search (DFS) / Pre-order Traversal",
+            "In-order Traversal",
+            "Post-order Traversal"
+        ],
+        answer: 0
+    },
+    {
+        q: "According to the BST Property, for any given node X, which rule must strictly hold true?",
+        options: [
+            "Left subtree values <= X, Right subtree values >= X",
+            "Left subtree values < X, Right subtree values > X",
+            "Left subtree values > X, Right subtree values < X",
+            "Both subtrees must have identical node counts."
+        ],
+        answer: 1
+    },
+    {
+        q: "What is the result of performing an In-order Traversal on a valid Binary Search Tree (BST)?",
+        options: [
+            "Elements in reverse order",
+            "Elements in sorted ascending order",
+            "Elements grouped by depth level",
+            "Elements ordered by frequency"
+        ],
+        answer: 1
+    },
+    {
+        q: "What is the average runtime complexity of searching, insertion, and deletion operations in a Binary Search Tree of height h?",
+        options: [
+            "O(1)",
+            "O(n log n)",
+            "O(h)",
+            "O(h^2)"
+        ],
+        answer: 2
+    },
+    {
+        q: "What is the defining AVL Height Invariant for every node in an AVL tree?",
+        options: [
+            "The total height of the tree cannot exceed 5.",
+            "The height difference between left and right subtrees can be at most 1.",
+            "The left subtree must always be deeper than the right subtree.",
+            "All leaf nodes must reside at depth h."
+        ],
+        answer: 1
+    },
+    {
+        q: "Which rotation is required to balance an LL Imbalance (insertion into Left child's Left subtree)?",
+        options: [
+            "Left Rotation (LL Rotation)",
+            "Right Rotation (LL Rotation)",
+            "Left-Right Rotation",
+            "Right-Left Rotation"
+        ],
+        answer: 1
+    },
+    {
+        q: "How is an LR (Left-Right) Imbalance resolved?",
+        options: [
+            "Perform a Single Right Rotation on the Root.",
+            "Perform a Left Rotation on the Root, then Right Rotation on the Child.",
+            "Perform a Left Rotation on the Left Child, then a Right Rotation on the Root.",
+            "Perform a Right Rotation on the Right Child, then a Left Rotation on the Root."
+        ],
+        answer: 2
+    }
+];
+
+let studentName = "";
+let currentQuestionIndex = 0;
+let score = 0;
+let randomizedQuestions = [];
+let answerSubmitted = false;
+
+function shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function startQuiz() {
+    const input = document.getElementById("student-name");
+    if (!input.value.trim()) {
+        alert("Please enter your name to begin.");
+        return;
+    }
+    studentName = input.value.trim();
+
+    // 1. Shuffle main questions array
+    const shuffled = shuffleArray(quizData);
+
+    // 2. Shuffle answer choices while keeping track of correct indices
+    randomizedQuestions = shuffled.map((qObj) => {
+        const originalOptions = qObj.options;
+        const correctAnswerText = originalOptions[qObj.answer];
+        const shuffledOpts = shuffleArray(originalOptions);
+        const newAnswerIndex = shuffledOpts.indexOf(correctAnswerText);
+
+        return {
+            q: qObj.q,
+            options: shuffledOpts,
+            answer: newAnswerIndex
+        };
+    });
+
+    // Switch screen view
+    document.getElementById("start-screen").classList.remove("active");
+    document.getElementById("quiz-screen").classList.add("active");
+
+    renderQuestion();
+}
+
+function renderQuestion() {
+    answerSubmitted = false;
+    const currentQ = randomizedQuestions[currentQuestionIndex];
+
+    document.getElementById("progress-text").innerText = `Question ${currentQuestionIndex + 1} of ${randomizedQuestions.length}`;
+    document.getElementById("question-text").innerText = currentQ.q;
+    document.getElementById("feedback-text").innerText = "";
+    document.getElementById("feedback-text").className = "feedback-message";
+
+    const btn = document.getElementById("next-btn");
+    btn.innerText = "Submit Answer";
+    btn.disabled = true;
+
+    const wrapper = document.getElementById("options-wrapper");
+    wrapper.innerHTML = "";
+
+    currentQ.options.forEach((optText, idx) => {
+        const label = document.createElement("label");
+        label.className = "option-label";
+
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "current_option";
+        radio.value = idx;
+        radio.onchange = enableSubmitBtn;
+
+        label.appendChild(radio);
+        label.appendChild(document.createTextNode(optText));
+        wrapper.appendChild(label);
+    });
+}
+
+function enableSubmitBtn() {
+    if (!answerSubmitted) {
+        document.getElementById("next-btn").disabled = false;
+    }
+}
+
+function handleButtonClick() {
+    if (!answerSubmitted) {
+        submitAnswer();
+    } else {
+        nextQuestion();
+    }
+}
+
+function submitAnswer() {
+    answerSubmitted = true;
+    const selectedRadio = document.querySelector('input[name="current_option"]:checked');
+    const selectedVal = parseInt(selectedRadio.value, 10);
+    const currentQ = randomizedQuestions[currentQuestionIndex];
+    const labels = document.querySelectorAll(".option-label");
+    const feedback = document.getElementById("feedback-text");
+
+    // Lock all input fields so the answer cannot be changed
+    labels.forEach(l => l.classList.add("disabled"));
+
+    if (selectedVal === currentQ.answer) {
+        score++;
+        labels[selectedVal].classList.add("correct");
+        feedback.innerText = "Correct!";
+        feedback.classList.add("correct");
+    } else {
+        labels[selectedVal].classList.add("incorrect");
+        labels[currentQ.answer].classList.add("correct");
+        feedback.innerText = "Incorrect.";
+        feedback.classList.add("incorrect");
+    }
+
+    const btn = document.getElementById("next-btn");
+    if (currentQuestionIndex === randomizedQuestions.length - 1) {
+        btn.innerText = "View Final Score";
+    } else {
+        btn.innerText = "Next Question";
+    }
+}
+
+function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < randomizedQuestions.length) {
+        renderQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById("quiz-screen").classList.remove("active");
+    document.getElementById("result-screen").classList.add("active");
+
+    document.getElementById("student-display").innerText = `Results for ${studentName}`;
+    document.getElementById("final-score").innerText = `${score} / ${randomizedQuestions.length}`;
+
+    const comment = document.getElementById("score-comment");
+    if (score >= 18) {
+        comment.innerText = "Excellent mastery of Binary & AVL Trees!";
+    } else if (score >= 14) {
+        comment.innerText = "Good job! Review the questions you missed.";
+    } else {
+        comment.innerText = "Consider reviewing the presentation slides again.";
+    }
+}
+</script>
+
+</body>
+</html>
